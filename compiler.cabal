@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 56b7a71a9df6582a11af929f869a28042a124cd37b928011917891cc42ebaf76
+-- hash: 2d1c15dcde316a6874e413aab20422d69c1d4a692f9570cee03561ad41e9d26e
 
 name:           compiler
 version:        0.1.0.0
@@ -35,6 +35,7 @@ library
       src
   build-depends:
       base >=4.7 && <5
+    , parsec
   default-language: Haskell2010
 
 executable compiler-exe
@@ -47,6 +48,7 @@ executable compiler-exe
   build-depends:
       base >=4.7 && <5
     , compiler
+    , parsec
   default-language: Haskell2010
 
 test-suite compiler-test
@@ -60,4 +62,5 @@ test-suite compiler-test
   build-depends:
       base >=4.7 && <5
     , compiler
+    , parsec
   default-language: Haskell2010
