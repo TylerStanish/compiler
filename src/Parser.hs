@@ -1,4 +1,4 @@
-module Lex where
+module Parser where
 
 import Text.Parsec ( many1
                    , runParserT
@@ -34,7 +34,6 @@ data GlobalStatement
 
 data LocalStatement
   = Assignment String Expression
-  | Print String
   deriving (Eq, Show)
 
 run :: Parser a -> String -> Either ParseError a
@@ -53,7 +52,25 @@ parameterList :: Parser [Parameter]
 parameterList = sepBy (Parameter <$> ident <*> ident) (string "," <* whitespace)
 
 function :: Parser GlobalStatement
-function = Function <$> (keyword "def" *> ident) <*> (parens parameterList) <*> pure []
+function = Function <$> (keyword "def" *> ident) <*> (parens parameterList) <*> functionBody
+
+globalStatement :: Parser GlobalStatement
+globalStatement = Parser.mod <|> imprt <|> function
+
+intLiteral :: Parser Expression
+intLiteral = IntLiteral <$> many1 digit
+
+expr :: Parser Expression
+expr = intLiteral -- todo add more here
+
+assignment :: Parser LocalStatement
+assignment = Assignment <$> (keyword "let" *> ident <* whitespace <* char '=' <* whitespace) <*> expr
+
+localStatement :: Parser LocalStatement
+localStatement = assignment -- todo add more here
+
+functionBody :: Parser [LocalStatement]
+functionBody = many localStatement
 
 whitespace :: Parser ()
 whitespace = void $ many $ oneOf "\n\t\r "

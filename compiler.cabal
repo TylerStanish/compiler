@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 2d1c15dcde316a6874e413aab20422d69c1d4a692f9570cee03561ad41e9d26e
+-- hash: 81d3e61fab8e4df9c9356662b1a096f84d06a2f9db81ec024a18acb6b2aa9971
 
 name:           compiler
 version:        0.1.0.0
@@ -29,6 +29,7 @@ library
   exposed-modules:
       Lex
       Lib
+      Parser
   other-modules:
       Paths_compiler
   hs-source-dirs:
