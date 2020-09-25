@@ -1,6 +1,8 @@
 module Parser where
 
 import Text.Parsec ( many1
+                   , manyTill
+                   , eof
                    , runParserT
                    , parseTest
                    , runParser
@@ -13,7 +15,12 @@ import Text.Parsec ( many1
                    , sepBy
                    )
 import Text.Parsec.String (Parser)
-import Text.Parsec.Char (digit, char, string)
+import Text.Parsec.Char ( digit
+                        , char
+                        , string
+                        , anyChar
+                        , endOfLine
+                        )
 import Control.Applicative ((<|>), many)
 import Control.Monad (void)
 import Data.Char (isLetter, isDigit)
@@ -40,7 +47,10 @@ run :: Parser a -> String -> Either ParseError a
 run parser input = (parse parser) "" input
 
 keyword :: String -> Parser ()
-keyword s = string s *> whitespace1
+keyword s = void $ lexeme $ string s
+
+symbol :: String -> Parser ()
+symbol s = void $ lexeme $ string s
 
 mod :: Parser GlobalStatement
 mod = Module <$> (keyword "module" *> ident)
@@ -49,10 +59,10 @@ imprt :: Parser GlobalStatement
 imprt = Import <$> (keyword "import" *> ident)
 
 parameterList :: Parser [Parameter]
-parameterList = sepBy (Parameter <$> ident <*> ident) (string "," <* whitespace)
+parameterList = sepBy (Parameter <$> ident <*> ident) (lexeme $ string ",")
 
 function :: Parser GlobalStatement
-function = Function <$> (keyword "def" *> ident) <*> (parens parameterList) <*> functionBody
+function = Function <$> (keyword "def" *> ident) <*> (lexeme $ parens parameterList) <*> functionBody
 
 globalStatement :: Parser GlobalStatement
 globalStatement = Parser.mod <|> imprt <|> function
@@ -64,10 +74,10 @@ expr :: Parser Expression
 expr = intLiteral -- todo add more here
 
 assignment :: Parser LocalStatement
-assignment = Assignment <$> (keyword "let" *> ident <* whitespace <* char '=' <* whitespace) <*> expr
+assignment = Assignment <$> (keyword "let" *> ident <* char '=' <* whitespace) <*> expr
 
 localStatement :: Parser LocalStatement
-localStatement = assignment -- todo add more here
+localStatement = lexeme $ assignment -- todo add more here
 
 functionBody :: Parser [LocalStatement]
 functionBody = many localStatement
@@ -78,19 +88,24 @@ whitespace = void $ many $ oneOf "\n\t\r "
 whitespace1 :: Parser ()
 whitespace1 = void $ many1 $ oneOf "\n\t\r "
 
+comment :: Parser ()
+--comment = void $ string "//" *> manyTill anyChar (void endOfLine <|> eof)
+comment = void $ do
+  string "//"
+  manyTill anyChar (void endOfLine <|> eof)
+
 lexeme :: Parser a -> Parser a
-lexeme p = p <* whitespace
+lexeme p = p <* whitespace <* many comment
 
 ident :: Parser String
-ident = do
+ident = lexeme $ do
   x <- firstChar
   xs <- many nonFirstChar
-  whitespace
   return (x : xs)
   where
     firstChar = satisfy (\a -> isLetter a || a == '_')
     nonFirstChar = satisfy (\a -> isDigit a || isLetter a || a == '_')
 
 parens :: Parser a -> Parser a
-parens p = between (char '(') (char ')') p
+parens p = between (lexeme $ char '(') (lexeme $ char ')') p
 
